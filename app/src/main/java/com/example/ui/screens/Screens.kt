@@ -80,7 +80,9 @@ fun AdMobBanner() {
 }
 
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(navController: NavController, viewModel: CalmViewModel) {
+    val stats by viewModel.userStats.collectAsState()
+    
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -160,6 +162,7 @@ fun HomeScreen(navController: NavController) {
                             Box(modifier = Modifier.size(40.dp).background(MaterialTheme.colorScheme.secondary, RoundedCornerShape(12.dp)))
                             Column {
                                 Text("Challenges", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSecondaryContainer)
+                                Text("Stage ${stats.currentStage}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f))
                             }
                         }
                     }
@@ -173,10 +176,12 @@ fun HomeScreen(navController: NavController) {
                             .clickable { navController.navigate("rewards") }
                             .padding(16.dp)
                     ) {
+                        val unlockedCount = 2 + (if(stats.tempThemeUnlocked) 1 else 0) + (if(stats.tempSoundUnlocked) 1 else 0) + (if(stats.tempSkinUnlocked) 1 else 0)
                         Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
                             Box(modifier = Modifier.size(40.dp).background(MaterialTheme.colorScheme.tertiary, RoundedCornerShape(12.dp)))
                             Column {
                                 Text("Rewards", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onTertiaryContainer)
+                                Text("${stats.calmCoins} Coins • $unlockedCount Items", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f))
                             }
                         }
                     }
@@ -247,7 +252,8 @@ fun FreePlayScreen(navController: NavController) {
 }
 
 @Composable
-fun ToyScreen(navController: NavController, toyIndex: Int) {
+fun ToyScreen(navController: NavController, toyIndex: Int, viewModel: CalmViewModel) {
+    val stats by viewModel.userStats.collectAsState()
     Scaffold(
         topBar = {
             @OptIn(ExperimentalMaterial3Api::class)
@@ -261,8 +267,8 @@ fun ToyScreen(navController: NavController, toyIndex: Int) {
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
             when(toyIndex) {
-                0 -> PopItToy()
-                1 -> StressBallToy()
+                0 -> PopItToy(vibrationEnabled = stats.vibrationEnabled)
+                1 -> StressBallToy(vibrationEnabled = stats.vibrationEnabled)
                 2 -> BubbleWrapToy()
                 3 -> SlimeToy()
                 4 -> SandFlowToy()
@@ -282,6 +288,20 @@ fun ChallengesScreen(navController: NavController, viewModel: CalmViewModel, adM
     var showIntroScreen by remember { mutableStateOf(false) }
     var introMode by remember { mutableStateOf("") } // "extra_chance" or "bonus_reward"
 
+    val handleFail: () -> Unit = {
+        if (stats.failedAttempts >= 2) {
+            introMode = "extra_chance"
+            showIntroScreen = true
+        } else {
+            viewModel.incrementFailedAttempts()
+        }
+    }
+
+    val handleSuccess: () -> Unit = {
+        introMode = "bonus_reward"
+        showIntroScreen = true
+    }
+
     if (showIntroScreen) {
         AlertDialog(
             onDismissRequest = { },
@@ -295,10 +315,10 @@ fun ChallengesScreen(navController: NavController, viewModel: CalmViewModel, adM
                             viewModel.resetFailedAttempts()
                         } else {
                             viewModel.addCoins(50)
-                            viewModel.completeStage()
+                            viewModel.unlockTempTheme()
                         }
                     }, onAdDismissed = {
-                        if (introMode == "bonus_reward") viewModel.completeStage() // fallback or continue
+                        if (introMode == "bonus_reward") viewModel.completeStage()
                     })
                 }) { Text("Continue with Ad") }
             },
@@ -306,7 +326,7 @@ fun ChallengesScreen(navController: NavController, viewModel: CalmViewModel, adM
                 Button(onClick = {
                     showIntroScreen = false
                     if (introMode == "extra_chance") {
-                        viewModel.resetFailedAttempts() // user didn't want extra chance, just restart implicitly
+                        viewModel.resetFailedAttempts()
                     } else {
                         viewModel.completeStage()
                     }
@@ -334,36 +354,15 @@ fun ChallengesScreen(navController: NavController, viewModel: CalmViewModel, adM
             Spacer(modifier = Modifier.height(16.dp))
             
             Box(modifier = Modifier.weight(1f)) {
-                // simple simulated stage
                 when (stats.currentStage % 8) {
-                    1 -> PopItToy { }
-                    2 -> StressBallToy { }
-                    3 -> FidgetSpinnerToy()
-                    4 -> BreathingCircleToy()
-                    5 -> BubbleWrapToy { }
-                    6 -> SlimeToy()
-                    7 -> SandFlowToy()
-                    0 -> RainModeToy() // 8th stage
-                }
-            }
-            
-            Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                Button(onClick = {
-                    if (stats.failedAttempts >= 2) {
-                        introMode = "extra_chance"
-                        showIntroScreen = true
-                    } else {
-                        viewModel.incrementFailedAttempts()
-                    }
-                }, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
-                    Text("Fail Stage")
-                }
-                
-                Button(onClick = {
-                    introMode = "bonus_reward"
-                    showIntroScreen = true
-                }) {
-                    Text("Complete Stage")
+                    1 -> ChallengePopIt(vibrationEnabled = stats.vibrationEnabled, onSuccess = handleSuccess)
+                    2 -> ChallengeStressBall(onSuccess = handleSuccess, onFail = handleFail)
+                    3 -> ChallengeFidgetSpinner(onSuccess = handleSuccess)
+                    4 -> ChallengeBreathingCircle(onSuccess = handleSuccess, onFail = handleFail)
+                    5 -> ChallengeBubbleWrap(onSuccess = handleSuccess)
+                    6 -> ChallengeSlime(onSuccess = handleSuccess, onFail = handleFail)
+                    7 -> ChallengeSandFlow(onSuccess = handleSuccess)
+                    0 -> ChallengeRainMode(onSuccess = handleSuccess)
                 }
             }
         }
@@ -396,7 +395,13 @@ fun RewardsScreen(navController: NavController, viewModel: CalmViewModel) {
                 }
             }
             Text("Unlocked Items", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(16.dp))
-            Text("- Default Theme\n- Default Sounds", modifier = Modifier.padding(horizontal = 16.dp))
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Text("- Default Theme")
+                Text("- Default Sounds")
+                if (stats.tempThemeUnlocked) Text("- Premium Theme (Next Stage)", color = MaterialTheme.colorScheme.primary)
+                if (stats.tempSoundUnlocked) Text("- Premium Sounds (Next Stage)", color = MaterialTheme.colorScheme.primary)
+                if (stats.tempSkinUnlocked) Text("- Premium Skin (Next Stage)", color = MaterialTheme.colorScheme.primary)
+            }
             Spacer(modifier = Modifier.weight(1f))
             AdMobBanner()
         }

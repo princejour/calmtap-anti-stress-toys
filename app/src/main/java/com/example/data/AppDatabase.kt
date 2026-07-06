@@ -20,7 +20,10 @@ data class UserStats(
     val soundEnabled: Boolean = true,
     val vibrationEnabled: Boolean = true,
     val darkModeEnabled: Boolean = false,
-    val failedAttempts: Int = 0
+    val failedAttempts: Int = 0,
+    val tempThemeUnlocked: Boolean = false,
+    val tempSoundUnlocked: Boolean = false,
+    val tempSkinUnlocked: Boolean = false
 )
 
 @Dao
@@ -32,7 +35,7 @@ interface UserStatsDao {
     suspend fun insertStats(stats: UserStats)
 }
 
-@Database(entities = [UserStats::class], version = 1, exportSchema = false)
+@Database(entities = [UserStats::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userStatsDao(): UserStatsDao
 
@@ -46,7 +49,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "calmtap_database"
-                ).build()
+                )
+                .fallbackToDestructiveMigration()
+                .build()
                 INSTANCE = instance
                 instance
             }

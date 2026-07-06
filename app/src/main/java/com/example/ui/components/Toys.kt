@@ -31,7 +31,7 @@ import kotlin.random.Random
 
 // Pop It Toy
 @Composable
-fun PopItToy(onPop: () -> Unit = {}) {
+fun PopItToy(vibrationEnabled: Boolean = true, onPop: () -> Unit = {}) {
     val context = LocalContext.current
     val vibrationManager = remember { VibrationManager(context) }
     var resetTrigger by remember { mutableStateOf(false) }
@@ -49,7 +49,7 @@ fun PopItToy(onPop: () -> Unit = {}) {
             ) {
                 items(25) { index ->
                     PopBubble(resetTrigger) {
-                        vibrationManager.vibrate()
+                        if (vibrationEnabled) vibrationManager.vibrate()
                         onPop()
                     }
                 }
@@ -89,7 +89,7 @@ fun PopBubble(resetTrigger: Boolean, onPop: () -> Unit) {
 
 // Stress Ball Toy
 @Composable
-fun StressBallToy(onSqueeze: () -> Unit = {}) {
+fun StressBallToy(vibrationEnabled: Boolean = true, onSqueeze: () -> Unit = {}) {
     val context = LocalContext.current
     val vibrationManager = remember { VibrationManager(context) }
     var isPressed by remember { mutableStateOf(false) }
@@ -118,7 +118,7 @@ fun StressBallToy(onSqueeze: () -> Unit = {}) {
                             val wasPressed = isPressed
                             isPressed = event.changes.any { it.pressed }
                             if (isPressed && !wasPressed) {
-                                vibrationManager.vibrate(30L)
+                                if (vibrationEnabled) vibrationManager.vibrate(30L)
                                 onSqueeze()
                             }
                         }

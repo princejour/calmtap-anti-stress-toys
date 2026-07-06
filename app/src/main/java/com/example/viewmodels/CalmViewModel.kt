@@ -60,7 +60,28 @@ class CalmViewModel(private val repository: UserRepository) : ViewModel() {
 
     fun completeStage() = viewModelScope.launch {
         val current = userStats.value
-        repository.updateStats(current.copy(currentStage = current.currentStage + 1, failedAttempts = 0))
+        repository.updateStats(current.copy(
+            currentStage = current.currentStage + 1, 
+            failedAttempts = 0,
+            tempThemeUnlocked = false,
+            tempSoundUnlocked = false,
+            tempSkinUnlocked = false
+        ))
+    }
+
+    fun unlockTempTheme() = viewModelScope.launch {
+        val current = userStats.value
+        repository.updateStats(current.copy(tempThemeUnlocked = true))
+    }
+
+    fun unlockTempSound() = viewModelScope.launch {
+        val current = userStats.value
+        repository.updateStats(current.copy(tempSoundUnlocked = true))
+    }
+
+    fun unlockTempSkin() = viewModelScope.launch {
+        val current = userStats.value
+        repository.updateStats(current.copy(tempSkinUnlocked = true))
     }
 
     fun resetProgress() = viewModelScope.launch {

@@ -14,11 +14,11 @@ fun CalmApp(viewModel: CalmViewModel, adManager: AdManager) {
 
     NavHost(navController = navController, startDestination = "splash") {
         composable("splash") { SplashScreen(navController) }
-        composable("home") { HomeScreen(navController) }
+        composable("home") { HomeScreen(navController, viewModel) }
         composable("free_play") { FreePlayScreen(navController) }
         composable("toy/{index}") { backStackEntry ->
             val index = backStackEntry.arguments?.getString("index")?.toIntOrNull() ?: 0
-            ToyScreen(navController, index)
+            ToyScreen(navController, index, viewModel)
         }
         composable("challenges") { ChallengesScreen(navController, viewModel, adManager) }
         composable("rewards") { RewardsScreen(navController, viewModel) }
