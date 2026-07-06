@@ -1,21 +1,10 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# CalmTap
 
-# Run and deploy your AI Studio app
+CalmTap is a premium, relaxing native Android application featuring interactive anti-stress toys, satisfying touch effects, and calming challenges.
 
-This contains everything you need to run your app locally.
+## Development Workflow
 
-View your app in AI Studio: https://ai.studio/apps/c5272ca7-e268-4fd8-93c9-e9e0bc4ec56a
+For details on the project architecture, features, and implementation steps, please review the following documents:
 
-## Run Locally
-
-**Prerequisites:**  [Android Studio](https://developer.android.com/studio)
-
-
-1. Open Android Studio
-2. Select **Open** and choose the directory containing this project
-3. Allow Android Studio to fix any incompatibilities as it imports the project.
-4. Create a file named `.env` in the project directory and set `GEMINI_API_KEY` in that file to your Gemini API key (see `.env.example` for an example)
-5. Remove this line from the app's `build.gradle.kts` file: `signingConfig = signingConfigs.getByName("debugConfig")`
-6. Run the app on an emulator or physical device
+- [Development Workflow](WORKFLOW.md)
+- [Implementation Checklist](IMPLEMENTATION_CHECKLIST.md)

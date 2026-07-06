@@ -18,7 +18,7 @@ fun CalmApp(viewModel: CalmViewModel, adManager: AdManager) {
         composable("free_play") { FreePlayScreen(navController) }
         composable("toy/{index}") { backStackEntry ->
             val index = backStackEntry.arguments?.getString("index")?.toIntOrNull() ?: 0
-            ToyScreen(navController, index, viewModel)
+            ToyScreen(navController, index, viewModel, adManager)
         }
         composable("challenges") { ChallengesScreen(navController, viewModel, adManager) }
         composable("rewards") { RewardsScreen(navController, viewModel) }

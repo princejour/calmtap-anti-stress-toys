@@ -252,15 +252,26 @@ fun FreePlayScreen(navController: NavController) {
 }
 
 @Composable
-fun ToyScreen(navController: NavController, toyIndex: Int, viewModel: CalmViewModel) {
+fun ToyScreen(navController: NavController, toyIndex: Int, viewModel: CalmViewModel, adManager: AdManager) {
     val stats by viewModel.userStats.collectAsState()
+    val context = LocalContext.current as Activity
+    val interstitialEnabled = false // Disabled by default per checklist
+
     Scaffold(
         topBar = {
             @OptIn(ExperimentalMaterial3Api::class)
             TopAppBar(
                 title = { Text("Relax") },
                 navigationIcon = {
-                    Button(onClick = { navController.popBackStack() }) { Text("Back") }
+                    Button(onClick = { 
+                        if (interstitialEnabled) {
+                            adManager.showInterstitial(context) {
+                                navController.popBackStack()
+                            }
+                        } else {
+                            navController.popBackStack()
+                        }
+                    }) { Text("Back") }
                 }
             )
         }
