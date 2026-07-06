@@ -1,0 +1,6 @@
+{
+  "name": "CalmTap",
+  "description": "Relaxing Fidget Toys",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
