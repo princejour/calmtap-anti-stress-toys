@@ -18,6 +18,8 @@ data class UserStats(
     val calmCoins: Int = 0,
     val currentStage: Int = 1,
     val soundEnabled: Boolean = true,
+    val musicEnabled: Boolean = true,
+    val sfxEnabled: Boolean = true,
     val vibrationEnabled: Boolean = true,
     val darkModeEnabled: Boolean = false,
     val failedAttempts: Int = 0,
@@ -35,7 +37,7 @@ interface UserStatsDao {
     suspend fun insertStats(stats: UserStats)
 }
 
-@Database(entities = [UserStats::class], version = 2, exportSchema = false)
+@Database(entities = [UserStats::class], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userStatsDao(): UserStatsDao
 

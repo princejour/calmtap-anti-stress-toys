@@ -25,15 +25,17 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
+import com.example.utils.SoundManager
+
 @Composable
-fun ChallengePopIt(vibrationEnabled: Boolean = true, onSuccess: () -> Unit) {
+fun ChallengePopIt(vibrationEnabled: Boolean = true, soundManager: SoundManager? = null, onSuccess: () -> Unit) {
     var pops by remember { mutableStateOf(0) }
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize()) {
         Text("Pop 10 bubbles!", style = MaterialTheme.typography.titleMedium)
         Text("$pops / 10", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
         Box(modifier = Modifier.weight(1f)) {
-            PopItToy(vibrationEnabled) {
+            PopItToy(vibrationEnabled = vibrationEnabled, soundManager = soundManager) {
                 pops++
                 if (pops == 10) onSuccess()
             }
@@ -42,7 +44,7 @@ fun ChallengePopIt(vibrationEnabled: Boolean = true, onSuccess: () -> Unit) {
 }
 
 @Composable
-fun ChallengeStressBall(onSuccess: () -> Unit, onFail: () -> Unit) {
+fun ChallengeStressBall(soundManager: SoundManager? = null, onSuccess: () -> Unit, onFail: () -> Unit) {
     var isPressed by remember { mutableStateOf(false) }
     var timePressed by remember { mutableStateOf(0f) }
     
@@ -80,7 +82,9 @@ fun ChallengeStressBall(onSuccess: () -> Unit, onFail: () -> Unit) {
                         awaitPointerEventScope {
                             while (true) {
                                 val event = awaitPointerEvent()
+                                val wasPressed = isPressed
                                 isPressed = event.changes.any { it.pressed }
+                                if (isPressed && !wasPressed) { soundManager?.playSfx("squish") }
                             }
                         }
                     }
@@ -90,7 +94,7 @@ fun ChallengeStressBall(onSuccess: () -> Unit, onFail: () -> Unit) {
 }
 
 @Composable
-fun ChallengeFidgetSpinner(onSuccess: () -> Unit) {
+fun ChallengeFidgetSpinner(soundManager: SoundManager? = null, onSuccess: () -> Unit) {
     var rotation by remember { mutableStateOf(0f) }
     var velocity by remember { mutableStateOf(0f) }
     var maxVelocity by remember { mutableStateOf(0f) }
@@ -117,7 +121,7 @@ fun ChallengeFidgetSpinner(onSuccess: () -> Unit) {
         Text("Speed: ${maxVelocity.toInt()} / 40", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
         Box(contentAlignment = Alignment.Center, modifier = Modifier.weight(1f).fillMaxWidth().pointerInput(Unit) {
-            detectDragGestures { change, dragAmount -> velocity += dragAmount.x * 0.5f }
+            detectDragGestures { change, dragAmount -> velocity += dragAmount.x * 0.5f; if (Math.abs(velocity) > 2f) soundManager?.playSfx("spin", Math.min(1f, Math.abs(velocity) / 20f)) }
         }) {
             Canvas(modifier = Modifier.size(200.dp).graphicsLayer { rotationZ = rotation }) {
                 val center = Offset(size.width/2, size.height/2)
@@ -135,7 +139,7 @@ fun ChallengeFidgetSpinner(onSuccess: () -> Unit) {
 }
 
 @Composable
-fun ChallengeBreathingCircle(onSuccess: () -> Unit, onFail: () -> Unit) {
+fun ChallengeBreathingCircle(soundManager: SoundManager? = null, onSuccess: () -> Unit, onFail: () -> Unit) {
     var timeElapsed by remember { mutableStateOf(0f) }
     LaunchedEffect(Unit) {
         while(timeElapsed < 12f) {
@@ -159,20 +163,20 @@ fun ChallengeBreathingCircle(onSuccess: () -> Unit, onFail: () -> Unit) {
                 }
             }
         }) {
-            BreathingCircleToy()
+            BreathingCircleToy(soundManager = soundManager)
         }
     }
 }
 
 @Composable
-fun ChallengeBubbleWrap(onSuccess: () -> Unit) {
+fun ChallengeBubbleWrap(soundManager: SoundManager? = null, onSuccess: () -> Unit) {
     var pops by remember { mutableStateOf(0) }
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize()) {
         Text("Clear 20 bubbles!", style = MaterialTheme.typography.titleMedium)
         Text("$pops / 20", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
         Box(modifier = Modifier.weight(1f)) {
-            BubbleWrapToy {
+            BubbleWrapToy(soundManager = soundManager) {
                 pops++
                 if (pops >= 20) onSuccess()
             }
@@ -181,7 +185,7 @@ fun ChallengeBubbleWrap(onSuccess: () -> Unit) {
 }
 
 @Composable
-fun ChallengeSlime(onSuccess: () -> Unit, onFail: () -> Unit) {
+fun ChallengeSlime(soundManager: SoundManager? = null, onSuccess: () -> Unit, onFail: () -> Unit) {
     var timeDragging by remember { mutableStateOf(0f) }
     var isDragging by remember { mutableStateOf(false) }
 
@@ -211,7 +215,7 @@ fun ChallengeSlime(onSuccess: () -> Unit, onFail: () -> Unit) {
                     onDragStart = { isDragging = true; touchPoint = it },
                     onDragEnd = { isDragging = false; touchPoint = null },
                     onDragCancel = { isDragging = false; touchPoint = null },
-                    onDrag = { change, _ -> touchPoint = change.position }
+                    onDrag = { change, _ -> touchPoint = change.position; soundManager?.playSfx("slime") }
                 )
             }) {
                 val center = Offset(size.width / 2, size.height / 2)
@@ -227,7 +231,7 @@ fun ChallengeSlime(onSuccess: () -> Unit, onFail: () -> Unit) {
 }
 
 @Composable
-fun ChallengeSandFlow(onSuccess: () -> Unit) {
+fun ChallengeSandFlow(soundManager: SoundManager? = null, onSuccess: () -> Unit) {
     var timeDragging by remember { mutableStateOf(0f) }
     var isDragging by remember { mutableStateOf(false) }
 
@@ -271,7 +275,7 @@ fun ChallengeSandFlow(onSuccess: () -> Unit) {
                     onDragStart = { isDragging = true; touchPoint = it },
                     onDragEnd = { isDragging = false; touchPoint = null },
                     onDragCancel = { isDragging = false; touchPoint = null },
-                    onDrag = { change, _ -> touchPoint = change.position }
+                    onDrag = { change, _ -> touchPoint = change.position; soundManager?.playSfx("sand") }
                 )
             }) {
                 val w = size.width
@@ -286,7 +290,7 @@ fun ChallengeSandFlow(onSuccess: () -> Unit) {
 }
 
 @Composable
-fun ChallengeRainMode(onSuccess: () -> Unit) {
+fun ChallengeRainMode(soundManager: SoundManager? = null, onSuccess: () -> Unit) {
     var taps by remember { mutableStateOf(0) }
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize()) {
         Text("Tap the rain 5 times!", style = MaterialTheme.typography.titleMedium)
@@ -303,7 +307,7 @@ fun ChallengeRainMode(onSuccess: () -> Unit) {
                 }
             }
         }) {
-            RainModeToy()
+            RainModeToy(soundManager = soundManager)
         }
     }
 }

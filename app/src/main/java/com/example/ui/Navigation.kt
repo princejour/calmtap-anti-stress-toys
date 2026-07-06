@@ -8,8 +8,10 @@ import com.example.ads.AdManager
 import com.example.ui.screens.*
 import com.example.viewmodels.CalmViewModel
 
+import com.example.utils.SoundManager
+
 @Composable
-fun CalmApp(viewModel: CalmViewModel, adManager: AdManager) {
+fun CalmApp(viewModel: CalmViewModel, adManager: AdManager, soundManager: SoundManager) {
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = "splash") {
@@ -18,9 +20,9 @@ fun CalmApp(viewModel: CalmViewModel, adManager: AdManager) {
         composable("free_play") { FreePlayScreen(navController) }
         composable("toy/{index}") { backStackEntry ->
             val index = backStackEntry.arguments?.getString("index")?.toIntOrNull() ?: 0
-            ToyScreen(navController, index, viewModel, adManager)
+            ToyScreen(navController, index, viewModel, adManager, soundManager)
         }
-        composable("challenges") { ChallengesScreen(navController, viewModel, adManager) }
+        composable("challenges") { ChallengesScreen(navController, viewModel, adManager, soundManager) }
         composable("rewards") { RewardsScreen(navController, viewModel) }
         composable("settings") { SettingsScreen(navController, viewModel) }
         composable("privacy") { PrivacyScreen(navController) }

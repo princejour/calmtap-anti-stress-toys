@@ -29,12 +29,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
+import com.example.utils.SoundManager
+
 // Pop It Toy
 @Composable
-fun PopItToy(vibrationEnabled: Boolean = true, onPop: () -> Unit = {}) {
+fun PopItToy(vibrationEnabled: Boolean = true, soundManager: SoundManager? = null, onPop: () -> Unit = {}) {
     val context = LocalContext.current
     val vibrationManager = remember { VibrationManager(context) }
     var resetTrigger by remember { mutableStateOf(false) }
+
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Box(
             modifier = Modifier
@@ -50,6 +53,7 @@ fun PopItToy(vibrationEnabled: Boolean = true, onPop: () -> Unit = {}) {
                 items(25) { index ->
                     PopBubble(resetTrigger) {
                         if (vibrationEnabled) vibrationManager.vibrate()
+                        soundManager?.playSfx("pop")
                         onPop()
                     }
                 }
@@ -89,10 +93,11 @@ fun PopBubble(resetTrigger: Boolean, onPop: () -> Unit) {
 
 // Stress Ball Toy
 @Composable
-fun StressBallToy(vibrationEnabled: Boolean = true, onSqueeze: () -> Unit = {}) {
+fun StressBallToy(vibrationEnabled: Boolean = true, soundManager: SoundManager? = null, onSqueeze: () -> Unit = {}) {
     val context = LocalContext.current
     val vibrationManager = remember { VibrationManager(context) }
     var isPressed by remember { mutableStateOf(false) }
+
     val scaleX by animateFloatAsState(
         targetValue = if (isPressed) 1.2f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy), label = "x"
@@ -119,6 +124,7 @@ fun StressBallToy(vibrationEnabled: Boolean = true, onSqueeze: () -> Unit = {}) 
                             isPressed = event.changes.any { it.pressed }
                             if (isPressed && !wasPressed) {
                                 if (vibrationEnabled) vibrationManager.vibrate(30L)
+                                soundManager?.playSfx("squish")
                                 onSqueeze()
                             }
                         }
@@ -130,7 +136,7 @@ fun StressBallToy(vibrationEnabled: Boolean = true, onSqueeze: () -> Unit = {}) 
 
 // Bubble Wrap Toy
 @Composable
-fun BubbleWrapToy(onPop: () -> Unit = {}) {
+fun BubbleWrapToy(soundManager: SoundManager? = null, onPop: () -> Unit = {}) {
     var resetTrigger by remember { mutableStateOf(false) }
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Box(
@@ -145,7 +151,10 @@ fun BubbleWrapToy(onPop: () -> Unit = {}) {
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 items(60) {
-                    WrapBubble(resetTrigger, onPop)
+                    WrapBubble(resetTrigger) {
+                        soundManager?.playSfx("bubble")
+                        onPop()
+                    }
                 }
             }
         }
@@ -179,18 +188,30 @@ fun WrapBubble(resetTrigger: Boolean, onPop: () -> Unit) {
 
 // Slime Toy
 @Composable
-fun SlimeToy() {
+fun SlimeToy(soundManager: SoundManager? = null) {
     var touchPoint by remember { mutableStateOf<Offset?>(null) }
+    var lastSoundTime by remember { mutableStateOf(0L) }
     
     Canvas(
         modifier = Modifier
             .fillMaxSize()
             .pointerInput(Unit) {
                 detectDragGestures(
-                    onDragStart = { touchPoint = it },
+                    onDragStart = { 
+                        touchPoint = it
+                        soundManager?.playSfx("slime")
+                        lastSoundTime = System.currentTimeMillis()
+                    },
                     onDragEnd = { touchPoint = null },
                     onDragCancel = { touchPoint = null },
-                    onDrag = { change, _ -> touchPoint = change.position }
+                    onDrag = { change, _ -> 
+                        touchPoint = change.position
+                        val now = System.currentTimeMillis()
+                        if (now - lastSoundTime > 400) {
+                            soundManager?.playSfx("slime")
+                            lastSoundTime = now
+                        }
+                    }
                 )
             }
     ) {
@@ -209,12 +230,19 @@ fun SlimeToy() {
 
 // Sand Flow Toy
 @Composable
-fun SandFlowToy() {
+fun SandFlowToy(soundManager: SoundManager? = null) {
     val particles = remember { List(100) { Offset(Random.nextFloat(), Random.nextFloat()) }.toMutableStateList() }
     var touchPoint by remember { mutableStateOf<Offset?>(null) }
+    var lastSoundTime by remember { mutableStateOf(0L) }
     
     LaunchedEffect(touchPoint) {
         while (true) {
+            val now = System.currentTimeMillis()
+            if (touchPoint != null && now - lastSoundTime > 200) {
+                soundManager?.playSfx("sand")
+                lastSoundTime = now
+            }
+            
             for (i in particles.indices) {
                 val p = particles[i]
                 var nextY = p.y + 0.01f
@@ -255,12 +283,18 @@ fun SandFlowToy() {
 
 // Fidget Spinner
 @Composable
-fun FidgetSpinnerToy() {
+fun FidgetSpinnerToy(soundManager: SoundManager? = null) {
     var rotation by remember { mutableStateOf(0f) }
     var velocity by remember { mutableStateOf(0f) }
+    var lastSoundTime by remember { mutableStateOf(0L) }
     
     LaunchedEffect(Unit) {
         while (true) {
+            val now = System.currentTimeMillis()
+            if (Math.abs(velocity) > 2f && now - lastSoundTime > 300) {
+                soundManager?.playSfx("spin", Math.min(1f, Math.abs(velocity) / 20f))
+                lastSoundTime = now
+            }
             if (velocity > 0) {
                 rotation += velocity
                 velocity *= 0.98f // friction
@@ -303,7 +337,7 @@ fun FidgetSpinnerToy() {
 
 // Breathing Circle
 @Composable
-fun BreathingCircleToy() {
+fun BreathingCircleToy(soundManager: SoundManager? = null) {
     val infiniteTransition = rememberInfiniteTransition(label = "breathing")
     val scale by infiniteTransition.animateFloat(
         initialValue = 0.5f,
@@ -315,6 +349,8 @@ fun BreathingCircleToy() {
         label = "scale"
     )
     
+    LaunchedEffect(scale > 1.0f) { soundManager?.playSfx("breathe") }
+
     val text = if (scale < 1.0f) "Breathe In" else "Breathe Out"
 
     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -330,7 +366,9 @@ fun BreathingCircleToy() {
 
 // Rain Mode
 @Composable
-fun RainModeToy() {
+fun RainModeToy(soundManager: SoundManager? = null) {
+    LaunchedEffect(Unit) { soundManager?.playSfx("rain") }
+
     var ripples = remember { mutableStateListOf<Offset>() }
     
     LaunchedEffect(ripples.size) {
@@ -349,6 +387,7 @@ fun RainModeToy() {
                     while (true) {
                         val event = awaitPointerEvent()
                         if (event.changes.any { it.pressed }) {
+                            soundManager?.playSfx("water_drop")
                             ripples.add(event.changes.first().position)
                         }
                     }

@@ -1,5 +1,10 @@
 package com.example.ui.screens
 
+import com.example.utils.SoundManager
+
+
+
+
 import android.app.Activity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -251,8 +256,10 @@ fun FreePlayScreen(navController: NavController) {
     }
 }
 
+
+
 @Composable
-fun ToyScreen(navController: NavController, toyIndex: Int, viewModel: CalmViewModel, adManager: AdManager) {
+fun ToyScreen(navController: NavController, toyIndex: Int, viewModel: CalmViewModel, adManager: AdManager, soundManager: SoundManager) {
     val stats by viewModel.userStats.collectAsState()
     val context = LocalContext.current as Activity
     val interstitialEnabled = false // Disabled by default per checklist
@@ -278,14 +285,14 @@ fun ToyScreen(navController: NavController, toyIndex: Int, viewModel: CalmViewMo
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
             when(toyIndex) {
-                0 -> PopItToy(vibrationEnabled = stats.vibrationEnabled)
-                1 -> StressBallToy(vibrationEnabled = stats.vibrationEnabled)
-                2 -> BubbleWrapToy()
-                3 -> SlimeToy()
-                4 -> SandFlowToy()
-                5 -> FidgetSpinnerToy()
-                6 -> BreathingCircleToy()
-                7 -> RainModeToy()
+                0 -> PopItToy(vibrationEnabled = stats.vibrationEnabled, soundManager = soundManager)
+                1 -> StressBallToy(vibrationEnabled = stats.vibrationEnabled, soundManager = soundManager)
+                2 -> BubbleWrapToy(soundManager = soundManager)
+                3 -> SlimeToy(soundManager = soundManager)
+                4 -> SandFlowToy(soundManager = soundManager)
+                5 -> FidgetSpinnerToy(soundManager = soundManager)
+                6 -> BreathingCircleToy(soundManager = soundManager)
+                7 -> RainModeToy(soundManager = soundManager)
                 else -> Text("Toy not found")
             }
         }
@@ -293,7 +300,7 @@ fun ToyScreen(navController: NavController, toyIndex: Int, viewModel: CalmViewMo
 }
 
 @Composable
-fun ChallengesScreen(navController: NavController, viewModel: CalmViewModel, adManager: AdManager) {
+fun ChallengesScreen(navController: NavController, viewModel: CalmViewModel, adManager: AdManager, soundManager: SoundManager) {
     val stats by viewModel.userStats.collectAsState()
     val context = LocalContext.current as Activity
     var showIntroScreen by remember { mutableStateOf(false) }
@@ -366,14 +373,14 @@ fun ChallengesScreen(navController: NavController, viewModel: CalmViewModel, adM
             
             Box(modifier = Modifier.weight(1f)) {
                 when (stats.currentStage % 8) {
-                    1 -> ChallengePopIt(vibrationEnabled = stats.vibrationEnabled, onSuccess = handleSuccess)
-                    2 -> ChallengeStressBall(onSuccess = handleSuccess, onFail = handleFail)
-                    3 -> ChallengeFidgetSpinner(onSuccess = handleSuccess)
-                    4 -> ChallengeBreathingCircle(onSuccess = handleSuccess, onFail = handleFail)
-                    5 -> ChallengeBubbleWrap(onSuccess = handleSuccess)
-                    6 -> ChallengeSlime(onSuccess = handleSuccess, onFail = handleFail)
-                    7 -> ChallengeSandFlow(onSuccess = handleSuccess)
-                    0 -> ChallengeRainMode(onSuccess = handleSuccess)
+                    1 -> ChallengePopIt(vibrationEnabled = stats.vibrationEnabled, soundManager = soundManager, onSuccess = handleSuccess)
+                    2 -> ChallengeStressBall(soundManager = soundManager, onSuccess = handleSuccess, onFail = handleFail)
+                    3 -> ChallengeFidgetSpinner(soundManager = soundManager, onSuccess = handleSuccess)
+                    4 -> ChallengeBreathingCircle(soundManager = soundManager, onSuccess = handleSuccess, onFail = handleFail)
+                    5 -> ChallengeBubbleWrap(soundManager = soundManager, onSuccess = handleSuccess)
+                    6 -> ChallengeSlime(soundManager = soundManager, onSuccess = handleSuccess, onFail = handleFail)
+                    7 -> ChallengeSandFlow(soundManager = soundManager, onSuccess = handleSuccess)
+                    0 -> ChallengeRainMode(soundManager = soundManager, onSuccess = handleSuccess)
                 }
             }
         }
@@ -435,8 +442,16 @@ fun SettingsScreen(navController: NavController, viewModel: CalmViewModel) {
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Sound", style = MaterialTheme.typography.titleLarge)
+                Text("Master Sound", style = MaterialTheme.typography.titleLarge)
                 Switch(checked = stats.soundEnabled, onCheckedChange = { viewModel.toggleSound() })
+            }
+            Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Music", style = MaterialTheme.typography.titleLarge)
+                Switch(checked = stats.musicEnabled, onCheckedChange = { viewModel.toggleMusic() })
+            }
+            Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Sound Effects", style = MaterialTheme.typography.titleLarge)
+                Switch(checked = stats.sfxEnabled, onCheckedChange = { viewModel.toggleSfx() })
             }
             Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Vibration", style = MaterialTheme.typography.titleLarge)

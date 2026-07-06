@@ -19,10 +19,13 @@ import com.example.viewmodels.CalmViewModel
 import com.example.viewmodels.CalmViewModelFactory
 import com.google.android.gms.ads.MobileAds
 
+import com.example.utils.SoundManager
+
 class MainActivity : ComponentActivity() {
 
     private lateinit var adManager: AdManager
     private lateinit var viewModel: CalmViewModel
+    private lateinit var soundManager: SoundManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +33,7 @@ class MainActivity : ComponentActivity() {
 
         MobileAds.initialize(this) {}
         adManager = AdManager(this)
+        soundManager = SoundManager(this)
 
         val database = AppDatabase.getDatabase(applicationContext)
         val repository = UserRepository(database.userStatsDao())
@@ -37,11 +41,34 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val stats by viewModel.userStats.collectAsState()
+            soundManager.updateSettings(stats.soundEnabled, stats.musicEnabled, stats.sfxEnabled)
+            
             MyApplicationTheme(darkTheme = stats.darkModeEnabled) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    CalmApp(viewModel = viewModel, adManager = adManager)
+                    CalmApp(viewModel = viewModel, adManager = adManager, soundManager = soundManager)
                 }
             }
+        }
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        if (::soundManager.isInitialized) {
+            soundManager.playMusic()
+        }
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        if (::soundManager.isInitialized) {
+            soundManager.pauseMusic()
+        }
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        if (::soundManager.isInitialized) {
+            soundManager.release()
         }
     }
 }

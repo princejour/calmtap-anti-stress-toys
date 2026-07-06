@@ -43,6 +43,16 @@ class CalmViewModel(private val repository: UserRepository) : ViewModel() {
         repository.updateStats(current.copy(darkModeEnabled = !current.darkModeEnabled))
     }
 
+    fun toggleMusic() = viewModelScope.launch {
+        val current = userStats.value
+        repository.updateStats(current.copy(musicEnabled = !current.musicEnabled))
+    }
+
+    fun toggleSfx() = viewModelScope.launch {
+        val current = userStats.value
+        repository.updateStats(current.copy(sfxEnabled = !current.sfxEnabled))
+    }
+
     fun addCoins(amount: Int) = viewModelScope.launch {
         val current = userStats.value
         repository.updateStats(current.copy(calmCoins = current.calmCoins + amount))
@@ -86,6 +96,12 @@ class CalmViewModel(private val repository: UserRepository) : ViewModel() {
 
     fun resetProgress() = viewModelScope.launch {
         val current = userStats.value
-        repository.updateStats(UserStats(soundEnabled = current.soundEnabled, vibrationEnabled = current.vibrationEnabled, darkModeEnabled = current.darkModeEnabled))
+        repository.updateStats(UserStats(
+            soundEnabled = current.soundEnabled, 
+            musicEnabled = current.musicEnabled,
+            sfxEnabled = current.sfxEnabled,
+            vibrationEnabled = current.vibrationEnabled, 
+            darkModeEnabled = current.darkModeEnabled
+        ))
     }
 }
